@@ -30,9 +30,14 @@ def download_segment(args):
         return fname
 
     try:
+        segment_headers = {
+            **HEADERS,
+            "Referer": "https://www.atvavrupa.tv/webtv/canli-yayin",
+            "Origin": "https://www.atvavrupa.tv",
+        }
         response = requests.get(
             url,
-            headers=HEADERS,
+            headers=segment_headers,
             timeout=20
         )
         response.raise_for_status()
@@ -62,6 +67,8 @@ def download_segment(args):
 def get_stream_url():
     command = [
         "streamlink",
+        "--http-referrer",
+        "https://www.atvavrupa.tv/webtv/canli-yayin",
         "--stream-url",
         "https://www.atvavrupa.tv/canli-yayin",
         "best",
@@ -162,17 +169,17 @@ def write_m3u8(valid_files, media_sequence):
         int(max(item[2] for item in valid_files) + 0.999)
     )
 
-    with open(M3U8_FILENAME, "w", encoding="utf-8", newline="\\n") as f:
-        f.write("#EXTM3U\\n")
-        f.write("#EXTVLCOPT:http-referrer=https://www.atvavrupa.tv/webtv/canli-yayin\\n")
-        f.write("#EXT-X-VERSION:3\\n")
-        f.write("#EXT-X-PLAYLIST-TYPE:EVENT\\n")
-        f.write(f"#EXT-X-TARGETDURATION:{target_duration}\\n")
-        f.write(f"#EXT-X-MEDIA-SEQUENCE:{media_sequence}\\n")
+    with open(M3U8_FILENAME, "w", encoding="utf-8", newline="\n") as f:
+        f.write("#EXTM3U\n")
+        f.write("#EXTVLCOPT:http-referrer=https://www.atvavrupa.tv/webtv/canli-yayin\n")
+        f.write("#EXT-X-VERSION:3\n")
+        f.write("#EXT-X-PLAYLIST-TYPE:EVENT\n")
+        f.write(f"#EXT-X-TARGETDURATION:{target_duration}\n")
+        f.write(f"#EXT-X-MEDIA-SEQUENCE:{media_sequence}\n")
 
         for fname, _, duration in valid_files:
-            f.write(f"#EXTINF:{duration:.3f},\\n")
-            f.write(f"{BASE_URL}{fname}\\n")
+            f.write(f"#EXTINF:{duration:.3f},\n")
+            f.write(f"{BASE_URL}{fname}\n")
 
 def main():
     os.makedirs(
@@ -204,9 +211,14 @@ def main():
 
     # 2. Kaynak M3U8'i indir.
     try:
+        source_headers = {
+            **HEADERS,
+            "Referer": "https://www.atvavrupa.tv/webtv/canli-yayin",
+            "Origin": "https://www.atvavrupa.tv",
+        }
         response = requests.get(
             stream_url,
-            headers=HEADERS,
+            headers=source_headers,
             timeout=20
         )
         response.raise_for_status()
