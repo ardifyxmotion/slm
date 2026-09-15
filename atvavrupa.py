@@ -364,17 +364,18 @@ def main():
             continue
 
     # Tüm mevcut segmentleri sıralı şekilde birleştir.
-    all_sequences = sorted(
-        {
-            seq for seq, _ in existing
-            if seq in duration_map
-        }
-        |
-        {
-            int(Path(fname).stem.split("_", 1)[1])
-            for fname, _, _ in valid_files
-        }
-    )
+    existing_sequences = {
+        seq for seq, _ in existing
+    }
+
+    current_sequences = set()
+    for fname, _, _ in valid_files:
+        try:
+            current_sequences.add(int(Path(fname).stem.split("_", 1)[1]))
+        except (ValueError, IndexError):
+            pass
+
+    all_sequences = sorted(existing_sequences | current_sequences)
 
     accumulated_files = []
 
@@ -383,9 +384,9 @@ def main():
         fpath = os.path.join(STREAM_DIR, fname)
 
         if os.path.exists(fpath) and os.path.getsize(fpath) > 0:
-            duration = duration_map.get(seq)
-            if duration is not None:
-                accumulated_files.append((fname, "", duration))
+            # Eski playlistte süre bulunamazsa HLS için güvenli bir varsayılan kullan.
+            duration = duration_map.get(seq, 6.0)
+            accumulated_files.append((fname, "", duration))
 
     if not accumulated_files:
         print("Birleştirilecek DVR segmenti bulunamadı.")
